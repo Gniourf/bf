@@ -110,10 +110,46 @@ jump_stack=()
 while (( i++ < len )); do
   [[ -v DEBUG ]] && debug
   case ${code[i]} in
-   (+)   printf '(( tape[$cell]++ ))\n' ;;
-   (-)   printf '(( tape[$cell]-- ))\n' ;;
-   ('>') printf '(( ++cell ))\n' ;;
-   ('<') printf '(( --cell ))\n' ;;
+   (+)   n=0
+         while [[ ${code[i]} = + ]]; do
+            ((++n,++i))
+         done
+         ((--i))
+         if ((n==1)); then
+            printf '((++tape[$cell]))\n'
+         else
+            printf '(( tape[$cell]+=%d ))\n' "$n"
+         fi ;;
+   (-)   n=0
+         while [[ ${code[i]} = - ]]; do
+            ((++n,++i))
+         done
+         ((--i))
+         if ((n==1)); then
+            printf '(( --tape[$cell] ))\n' "$n"
+         else
+            printf '(( tape[$cell]-=%d ))\n' "$n"
+         fi ;;
+   ('>') n=0
+         while [[ ${code[i]} = '>' ]]; do
+            ((++n,++i))
+         done
+         ((--i))
+         if ((n==1)); then
+            printf '(( ++cell ))\n' "$n"
+         else
+            printf '(( cell+=%d ))\n' "$n"
+         fi ;;
+   ('<') n=0
+         while [[ ${code[i]} = '<' ]]; do
+            ((++n,++i))
+         done
+         ((--i))
+         if ((n==1)); then
+            printf '(( --cell ))\n' "$n"
+         else
+            printf '(( cell-=%d ))\n' "$n"
+         fi ;;
    (.) printf 'if (( tape[$cell] >= 0 )); then
          printf -v output %%o "$(( tape[$cell] %% 256 ))"
        else
